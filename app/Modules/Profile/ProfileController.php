@@ -17,7 +17,19 @@ class ProfileController {
 
         $user = Database::fetchOne("SELECT id, name, email, phone, role, status, credit_current, credit_max, otp_code, is_verified, created_at FROM users WHERE id = :id LIMIT 1", ['id' => $userId]);
         $wallet = Database::fetchOne("SELECT balance, pending_balance FROM wallets WHERE user_id = :uid LIMIT 1", ['uid' => $userId]);
-        $orders = Database::fetchAll("SELECT id, order_number, total_amount, paid_amount, due_amount, payment_method, payment_status, order_status, created_at FROM orders WHERE user_id = :uid ORDER BY id DESC LIMIT 5", ['uid' => $userId]);
+        $orders = Database::fetchAll("SELECT id, order_number, total_amount, payment_status, order_status, created_at FROM orders WHERE user_id = :uid ORDER BY id DESC LIMIT 5", ['uid' => $userId]);
+
+        foreach ($orders as &$o) {
+            $o['payment_method'] = 'Wallet';
+            if ($o['payment_status'] === 'paid') {
+                $o['paid_amount'] = $o['total_amount'];
+                $o['due_amount'] = '0.00';
+            } else {
+                $o['paid_amount'] = '0.00';
+                $o['due_amount'] = $o['total_amount'];
+            }
+        }
+        unset($o);
 
         View::render('pages/profile', [
             'title' => 'My Account & Task Dashboard',

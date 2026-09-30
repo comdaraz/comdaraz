@@ -258,9 +258,9 @@ class OrderController {
         }
 
         $orders = Database::fetchAll(
-            "SELECT o.id, o.order_number, o.total_amount, o.paid_amount, o.due_amount, 
-                    o.payment_method, o.payment_type, o.payment_status, o.order_status, 
-                    o.shipping_address, o.created_at, o.customer_name, o.customer_phone 
+            "SELECT o.id, o.order_number, o.total_amount, 
+                    o.payment_status, o.order_status, 
+                    o.shipping_address, o.created_at 
              FROM orders o 
              WHERE o.user_id = :uid 
              ORDER BY o.id DESC",
@@ -268,12 +268,24 @@ class OrderController {
         );
 
         foreach ($orders as &$o) {
+            $o['customer_name'] = Session::get('user_name');
+            $o['customer_phone'] = '';
+            $o['payment_method'] = 'Wallet';
+            $o['payment_type'] = 'full';
+            if ($o['payment_status'] === 'paid') {
+                $o['paid_amount'] = $o['total_amount'];
+                $o['due_amount'] = '0.00';
+            } else {
+                $o['paid_amount'] = '0.00';
+                $o['due_amount'] = $o['total_amount'];
+            }
             $o['items'] = Database::fetchAll(
-                "SELECT product_title_snapshot, unit_price_snapshot, quantity, subtotal, selected_size, selected_color 
+                "SELECT product_title_snapshot, unit_price_snapshot, quantity, subtotal 
                  FROM order_items WHERE order_id = :oid",
                 ['oid' => $o['id']]
             );
         }
+        unset($o);
 
         View::render('pages/my_orders', [
             'title' => 'My Orders & Order History - Daraz Affiliate Platform',

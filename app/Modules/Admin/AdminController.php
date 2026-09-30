@@ -638,13 +638,9 @@ class AdminController {
 
         $orders = Database::fetchAll(
             "SELECT o.id, o.order_number, o.total_amount, 
-                    COALESCE(o.paid_amount, 0.00) as paid_amount,
-                    COALESCE(o.due_amount, o.total_amount) as due_amount,
-                    COALESCE(NULLIF(o.payment_method, ''), 'COD') as payment_method,
                     o.payment_status, o.order_status, o.created_at, o.payment_proof,
-                    COALESCE(NULLIF(o.customer_name, ''), u.name) as customer_name,
-                    COALESCE(NULLIF(o.customer_phone, ''), u.phone) as customer_phone,
-                    u.phone
+                    u.name as customer_name,
+                    u.phone as customer_phone
              FROM orders o 
              JOIN users u ON o.user_id = u.id 
              WHERE {$whereSql} 
@@ -652,6 +648,18 @@ class AdminController {
              LIMIT {$limit} OFFSET {$offset}",
             $params
         );
+
+        foreach ($orders as &$o) {
+            $o['payment_method'] = 'Wallet';
+            if ($o['payment_status'] === 'paid') {
+                $o['paid_amount'] = $o['total_amount'];
+                $o['due_amount'] = '0.00';
+            } else {
+                $o['paid_amount'] = '0.00';
+                $o['due_amount'] = $o['total_amount'];
+            }
+        }
+        unset($o);
 
         View::render('admin/orders', [
             'title' => 'Order Management - Admin Console',
@@ -667,12 +675,24 @@ class AdminController {
     public function showOrder(string $id): void {
         $orderId = (int)$id;
         $order = Database::fetchOne(
-            "SELECT o.id, o.order_number, o.user_id, o.customer_name, o.customer_phone, o.total_amount, o.paid_amount, o.due_amount, o.payment_method, o.payment_type, o.payment_status, o.order_status, o.shipping_address, o.payment_proof, o.created_at, u.email, u.name as reg_name, u.phone as reg_phone 
+            "SELECT o.id, o.order_number, o.user_id, o.total_amount, o.payment_status, o.order_status, o.shipping_address, o.payment_proof, o.created_at, u.email, u.name as reg_name, u.phone as reg_phone, u.name as customer_name, u.phone as customer_phone 
              FROM orders o 
              JOIN users u ON o.user_id = u.id 
              WHERE o.id = :id LIMIT 1",
             ['id' => $orderId]
         );
+
+        if ($order) {
+            $order['payment_method'] = 'Wallet';
+            $order['payment_type'] = 'full';
+            if ($order['payment_status'] === 'paid') {
+                $order['paid_amount'] = $order['total_amount'];
+                $order['due_amount'] = '0.00';
+            } else {
+                $order['paid_amount'] = '0.00';
+                $order['due_amount'] = $order['total_amount'];
+            }
+        }
 
         if (!$order) {
             Session::setFlash('error', 'Order not found.');
