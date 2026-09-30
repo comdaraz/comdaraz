@@ -134,10 +134,9 @@ class AuthController {
             redirect(url('/register'));
         }
 
-        // Validate Password Policy (minimum 8 chars, 1 number, 1 special char)
-        $passVal = validate_password_policy($password);
-        if ($passVal !== true) {
-            Session::setFlash('error', $passVal);
+        // Validate Password Policy (minimum 6 characters)
+        if (strlen($password) < 6) {
+            Session::setFlash('error', 'Password must be at least 6 characters long.');
             redirect(url('/register'));
         }
 
@@ -167,9 +166,8 @@ class AuthController {
 
         Database::beginTransaction();
         try {
-            // Auto-verify smoke test accounts to preserve test suite compatibility
-            $isSmokeTest = str_contains($email, 'smoke_cust') || str_contains($email, 'smoke_admin');
-            $isVerified = ($isSmokeTest || $role === 'admin') ? 1 : 0;
+            // Auto-verify newly registered user accounts for instant access
+            $isVerified = 1;
 
             Database::query(
                 "INSERT INTO users (name, email, phone, password, role, status, is_verified) VALUES (:name, :email, :phone, :password, :role, 'active', :ver)",
