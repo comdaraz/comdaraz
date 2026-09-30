@@ -141,10 +141,11 @@ CREATE TABLE `cart_items` (
   `cart_id` BIGINT UNSIGNED NOT NULL,
   `product_id` BIGINT UNSIGNED NOT NULL,
   `quantity` INT UNSIGNED NOT NULL DEFAULT 1,
+  `selected_size` VARCHAR(50) DEFAULT NULL,
+  `selected_color` VARCHAR(50) DEFAULT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`cart_id`) REFERENCES `carts`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE,
-  UNIQUE KEY `unique_cart_product` (`cart_id`, `product_id`)
+  FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 9. ORDERS
