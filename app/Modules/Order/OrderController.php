@@ -154,20 +154,14 @@ class OrderController {
 
             $orderNumber = 'ORD-' . date('Ymd') . '-' . strtoupper(substr(md5(uniqid()), 0, 6));
 
-            // Insert Order record with customer info & financial status
+            // Insert Order record with financial status
             Database::query(
-                "INSERT INTO orders (order_number, user_id, customer_name, customer_phone, total_amount, paid_amount, due_amount, payment_method, payment_type, payment_status, order_status, shipping_address, payment_proof) 
-                 VALUES (:order_no, :uid, :cname, :cphone, :total, :paid, :due, :pmethod, :ptype, :pstatus, 'pending', :addr, :proof)",
+                "INSERT INTO orders (order_number, user_id, total_amount, payment_status, order_status, shipping_address, payment_proof) 
+                 VALUES (:order_no, :uid, :total, :pstatus, 'pending', :addr, :proof)",
                 [
                     'order_no' => $orderNumber,
                     'uid' => $userId,
-                    'cname' => $customerName,
-                    'cphone' => $customerPhone,
                     'total' => $totalAmount,
-                    'paid' => $paidAmount,
-                    'due' => $dueAmount,
-                    'pmethod' => $paymentMethod,
-                    'ptype' => $paymentType,
                     'pstatus' => $paymentStatus,
                     'addr' => $shippingAddress,
                     'proof' => $paymentProof
@@ -175,20 +169,18 @@ class OrderController {
             );
             $orderId = (int)Database::lastInsertId();
 
-            // Insert Order Items with selected variants
+            // Insert Order Items
             foreach ($preparedItems as $pItem) {
                 Database::query(
-                    "INSERT INTO order_items (order_id, product_id, product_title_snapshot, unit_price_snapshot, quantity, subtotal, selected_size, selected_color)
-                     VALUES (:oid, :pid, :title, :price, :qty, :subtotal, :size, :color)",
+                    "INSERT INTO order_items (order_id, product_id, product_title_snapshot, unit_price_snapshot, quantity, subtotal)
+                     VALUES (:oid, :pid, :title, :price, :qty, :subtotal)",
                     [
                         'oid' => $orderId,
                         'pid' => $pItem['product_id'],
                         'title' => $pItem['title'],
                         'price' => $pItem['unit_price'],
                         'qty' => $pItem['quantity'],
-                        'subtotal' => $pItem['subtotal'],
-                        'size' => $pItem['selected_size'],
-                        'color' => $pItem['selected_color']
+                        'subtotal' => $pItem['subtotal']
                     ]
                 );
 

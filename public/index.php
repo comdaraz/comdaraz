@@ -26,5 +26,17 @@ load_env(__DIR__ . '/../.env');
 \App\Core\Session::start();
 
 // 4. Load & Dispatch Web Routes
-$router = require_once __DIR__ . '/../routes/web.php';
-$router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);
+try {
+    $router = require_once __DIR__ . '/../routes/web.php';
+    $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+    $uri = $_SERVER['REQUEST_URI'] ?? '/';
+    $router->dispatch($method, $uri);
+} catch (\Throwable $e) {
+    error_log("Unhandled Exception: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
+    if (env('APP_DEBUG', false)) {
+        throw $e;
+    }
+    http_response_code(500);
+    \App\Core\View::render('pages/500', ['title' => '500 - Server Error', 'error' => $e->getMessage()]);
+}
+

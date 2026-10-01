@@ -25,8 +25,17 @@ class CSRF {
     public static function verifyOrDie(): void {
         $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
         if (!self::validate($token)) {
-            http_response_code(403);
-            die("CSRF Token Validation Failed. Please refresh the page and try again.");
+            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                http_response_code(403);
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => 'CSRF Token Validation Failed. Please refresh and try again.']);
+                exit;
+            }
+
+            Session::start();
+            Session::setFlash('error', 'Security token expired or invalid. Please refresh the page and try again.');
+            $referer = $_SERVER['HTTP_REFERER'] ?? url('/');
+            redirect($referer);
         }
     }
 }

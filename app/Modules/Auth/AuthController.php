@@ -32,18 +32,18 @@ class AuthController {
 
         // Query user by email, phone, OR name (email/phone take precedence)
         $user = Database::fetchOne(
-            "SELECT id, name, email, phone, password, role, status, failed_login_attempts, lockout_until FROM users WHERE email = :email OR phone = :phone LIMIT 1",
+            "SELECT id, name, email, phone, password, role, status, is_verified, failed_login_attempts, lockout_until FROM users WHERE email = :email OR phone = :phone LIMIT 1",
             ['email' => $identifier, 'phone' => $identifier]
         );
         if (!$user) {
             $user = Database::fetchOne(
-                "SELECT id, name, email, phone, password, role, status, failed_login_attempts, lockout_until FROM users WHERE name = :name LIMIT 1",
+                "SELECT id, name, email, phone, password, role, status, is_verified, failed_login_attempts, lockout_until FROM users WHERE name = :name LIMIT 1",
                 ['name' => $identifier]
             );
         }
         if (!$user && strtolower($identifier) === 'admin') {
             $user = Database::fetchOne(
-                "SELECT id, name, email, phone, password, role, status, failed_login_attempts, lockout_until FROM users WHERE role = 'admin' LIMIT 1"
+                "SELECT id, name, email, phone, password, role, status, is_verified, failed_login_attempts, lockout_until FROM users WHERE role = 'admin' LIMIT 1"
             );
         }
 

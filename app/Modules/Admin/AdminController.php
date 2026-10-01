@@ -792,19 +792,11 @@ class AdminController {
         }
 
         Database::query(
-            "UPDATE orders SET customer_name = :cname, customer_phone = :cphone, shipping_address = :addr, 
-                               total_amount = :total, paid_amount = :paid, due_amount = :due, 
-                               payment_method = :pmethod, payment_type = :ptype, payment_status = :pstatus, order_status = :ostatus 
+            "UPDATE orders SET shipping_address = :addr, total_amount = :total, payment_status = :pstatus, order_status = :ostatus 
              WHERE id = :id",
             [
-                'cname' => $customerName,
-                'cphone' => $customerPhone,
                 'addr' => $shippingAddress,
                 'total' => $totalAmount,
-                'paid' => $paidAmount,
-                'due' => $dueAmount,
-                'pmethod' => $paymentMethod,
-                'ptype' => $paymentType,
                 'pstatus' => $paymentStatus,
                 'ostatus' => $orderStatus,
                 'id' => $orderId
